@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Netlify DirectDeploy</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base & Background - Netlify Teal/Emerald Theme */
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #020617; /* Slate 950 */
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(20, 184, 166, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.12) 0%, transparent 25%);
+            color: #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Premium Glass Container */
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(9, 9, 11, 0.9));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Fierce Inputs - Ultra Optimized for Mobile */
+        .input-dark {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            color: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            font-size: 13px !important; 
+        }
+        
+        @media (min-width: 768px) {
+            .input-dark { font-size: 14px !important; }
+        }
+        
+        .input-dark:hover {
+            border-color: rgba(20, 184, 166, 0.4);
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .input-dark:focus {
+            border-color: #14b8a6; /* Teal 500 */
+            box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2), inset 0 2px 4px rgba(0,0,0,0.5);
+            outline: none;
+        }
+
+        /* Custom Framework Dropdown */
+        select.input-dark {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            cursor: pointer;
+        }
+        select.input-dark option { background-color: #0f172a; color: #fff; }
+
+        /* Cyber Checkbox */
+        .cyber-checkbox {
+            appearance: none;
+            width: 1.25rem; height: 1.25rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            border-radius: 0.25rem;
+            display: grid; place-content: center;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .cyber-checkbox::before {
+            content: "";
+            width: 0.65rem; height: 0.65rem;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #000;
+            background-color: transform;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        @media (min-width: 768px) {
+            .cyber-checkbox { width: 1.25rem; height: 1.25rem; }
+            .cyber-checkbox::before { width: 0.65rem; height: 0.65rem; }
+        }
+        .cyber-checkbox:checked { background-color: #14b8a6; border-color: #14b8a6; box-shadow: 0 0 10px rgba(20, 184, 166, 0.4); }
+        .cyber-checkbox:checked::before { transform: scale(1); }
+
+        /* Tabs & Nav */
+        .nav-tabs {
+            display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 0.75rem; 
+            border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem; padding: 0.375rem;
+            position: relative; z-index: 20;
+        }
+        .nav-tab {
+            flex: 1; padding: 0.5rem 1rem; text-align: center; border-radius: 0.5rem; 
+            font-size: 0.75rem; font-weight: 600; color: #94a3b8; cursor: pointer; 
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; 
+            gap: 0.375rem; border: 1px solid transparent;
+        }
+        @media (min-width: 768px) { .nav-tab { font-size: 0.875rem; padding: 0.75rem 1rem; gap: 0.5rem; } }
+        
+        .nav-tab:hover:not(.active) { background: rgba(255,255,255,0.05); color: #cbd5e1; }
+        .nav-tab.active { 
+            background: rgba(20, 184, 166, 0.15); color: #fff; border-color: rgba(20, 184, 166, 0.5); 
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.2), inset 0 0 10px rgba(20, 184, 166, 0.1); 
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+        .tab-content { display: none; animation: fadeIn 0.3s ease forwards; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Actions Buttons */
+        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .btn-action::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-20deg);
+        }
+        .btn-action:hover:not(:disabled)::after { animation: shine 1.5s infinite; }
+        .btn-action:disabled { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        .btn-deploy { background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+        .btn-deploy:hover:not(:disabled) { box-shadow: 0 6px 30px rgba(16, 185, 129, 0.6); transform: translateY(-2px); }
+
+        .btn-test { background: #111827; border: 1px solid #374151; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+        .btn-test:hover:not(:disabled) { background: #1f2937; border-color: #14b8a6; box-shadow: 0 0 15px rgba(20, 184, 166, 0.2); }
+
+        .btn-delete { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+        .btn-delete:hover:not(:disabled) { box-shadow: 0 6px 30px rgba(239, 68, 68, 0.6); transform: translateY(-2px); }
+
+        @keyframes shine { 100% { left: 200%; } }
+
+        /* Spinner */
+        .spinner { 
+            width: 16px; height: 16px; border-radius: 50%; background: conic-gradient(from 0deg at 50% 50%, transparent 0%, #fff 100%);
+            animation: spin 1s linear infinite; position: relative;
+        }
+        .spinner::before { content: ''; position: absolute; inset: 2px; background: #000; border-radius: 50%; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100;
+            display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; border: 1px solid #000; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #444; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen p-1 sm:p-4 md:p-8 flex justify-center items-start">
+    
+    <div class="w-full max-w-4xl glass-panel rounded-xl sm:rounded-2xl mb-6 md:mb-12 relative z-10">
+        <!-- Animated Top Glowing Line -->
+        <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 rounded-t-xl sm:rounded-t-2xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="p-3 md:p-6 pb-3 md:pb-4 border-b border-white/5 relative overflow-hidden flex justify-start items-center gap-3 md:gap-5 rounded-t-xl sm:rounded-t-2xl">
+            <i class="fas fa-server absolute -right-2 -top-2 text-7xl md:text-9xl text-white/5 transform -rotate-12 pointer-events-none"></i>
+            
+            <div class="relative z-10 shrink-0 group cursor-pointer" title="Netlify User" id="avatar-container">
+                <div class="absolute inset-0 bg-gradient-to-tr from-teal-400 to-emerald-500 rounded-full blur-[6px] md:blur-[10px] opacity-60 animate-pulse transition-opacity duration-500" id="avatar-glow"></div>
+                <img src="https://i.imgur.com/GDSFrlG.png" id="user-avatar" alt="User Avatar" class="relative w-10 h-10 md:w-16 md:h-16 rounded-full border-[2px] border-black object-cover z-10 group-hover:scale-105 transition-transform duration-300 bg-slate-900">
+            </div>
+
+            <div class="flex items-center relative z-10">
+                <div>
+                    <h1 class="text-lg md:text-3xl font-extrabold tracking-tight text-white mb-0 md:mb-1 leading-tight">
+                        Netlify <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">Deployer</span>
+                    </h1>
+                    <p class="text-slate-400 text-[10px] md:text-sm font-medium leading-tight mt-0.5">Instant deployment from GitHub</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 md:p-6 pt-3 md:pt-5 relative">
+            
+            <!-- Global Security Info -->
+            <div class="bg-black/40 border border-amber-500/20 rounded-lg p-2.5 md:p-4 mb-4 shadow-inner relative overflow-hidden">
+                <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500"></div>
+                <div class="flex items-start gap-2 md:gap-4">
+                    <div class="bg-amber-500/10 p-1 md:p-2 rounded-md text-amber-400 shrink-0 mt-0.5 hidden sm:block">
+                        <i class="fas fa-shield-halved text-sm md:text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-[10px] md:text-sm text-slate-300 leading-tight w-full">
+                        <details class="group">
+                            <summary class="font-bold text-white mb-0.5 cursor-pointer flex justify-between items-center outline-none select-none">
+                                <span class="flex items-center gap-1.5 hover:text-amber-300 transition-colors">
+                                    <i class="fas fa-info-circle text-amber-400 sm:hidden"></i> Info Keamanan & Cara Dapat Token
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 group-open:rotate-180"></i>
+                            </summary>
+                            
+                            <div class="mt-2.5 space-y-2 text-slate-400 border-t border-amber-500/20 pt-2.5 pb-1">
+                                <p class="mb-1.5">Aplikasi ini membutuhkan <strong>Netlify Personal Access Token</strong>. Ikuti langkah mudah ini untuk mendapatkannya:</p>
+                                <ol class="list-decimal list-outside ml-4 space-y-2 marker:text-amber-500/70">
+                                    <li>Buka halaman pengaturan token di <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" class="text-teal-400 font-semibold hover:text-teal-300 transition-colors">app.netlify.com <i class="fas fa-external-link-alt text-[8px] ml-0.5"></i></a>.</li>
+                                    <li>Klik tombol <strong>New access token</strong>.</li>
+                                    <li>Isi deskripsi (contoh: "Web Deployer") dan klik tombol <strong>Generate token</strong>.</li>
+                                    <li>Salin (<em>copy</em>) kode rahasia yang muncul <span class="text-rose-400">(Token ini hanya muncul sekali!)</span>.</li>
+                                    <li>Tempelkan (<em>paste</em>) kode tersebut ke kolom <strong>Netlify Token</strong> di bawah ini.</li>
+                                </ol>
+                                <div class="bg-black/50 p-2 rounded border border-white/5 mt-3 flex gap-2 items-center">
+                                    <i class="fas fa-lock text-slate-500 shrink-0"></i>
+                                    <p class="text-[9px] md:text-xs text-slate-500 leading-tight"><strong>Catatan Keamanan:</strong> Kami menggunakan sistem API resmi. Token Anda disandikan (obfuscated) dan hanya disimpan secara lokal di dalam browser perangkat Anda.</p>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Token & Account Logic -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-5 mb-4 pb-4 border-b border-white/5">
+                
+                <!-- Token Input -->
+                <div class="md:col-span-2 group">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider group-focus-within:text-teal-400 transition-colors">Netlify Token <span class="text-rose-500">*</span></label>
+                        <div class="flex items-center gap-2 md:gap-4">
+                            <button type="button" id="btn-load-account" class="hidden text-[9px] md:text-xs font-bold bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded hover:bg-teal-500/30 transition-colors flex items-center gap-1 border border-teal-500/30">
+                                <i class="fas fa-sync-alt"></i> <span>Load</span>
+                            </button>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="remember-token" class="cyber-checkbox origin-right scale-75 md:scale-100">
+                                <label for="remember-token" class="ml-1 md:ml-2 text-[10px] md:text-xs font-medium text-slate-400 cursor-pointer hover:text-slate-200 select-none">Remember</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex rounded-lg md:rounded-xl shadow-sm relative z-10">
+                        <span class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-500 border border-r-0 border-slate-700/80 group-focus-within:border-teal-500 transition-colors rounded-l-lg md:rounded-l-xl"><i class="fas fa-key text-xs md:text-base"></i></span>
+                        <input type="password" id="n-token" class="flex-1 w-full px-2 md:px-4 py-2 md:py-3 input-dark !border-x-0 mono tracking-wider" placeholder="nfp_...">
+                        <button type="button" id="toggle-token" class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors border border-l-0 border-slate-700/80 group-focus-within:border-teal-500 focus:outline-none rounded-r-lg md:rounded-r-xl">
+                            <i class="fas fa-eye text-xs md:text-base"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- GitHub Owner (Auto-Detected / Locked) -->
+                <div class="group relative md:col-span-2">
+                    <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">GitHub Connected Account <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                        <input type="text" id="n-owner" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono relative z-20 cursor-not-allowed opacity-80" placeholder="Awaiting 'Load' button..." disabled>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 z-30">
+                            <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">Auto</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Alert Box -->
+            <div id="alert-box" class="hidden mb-4 p-2.5 md:p-4 rounded-lg md:rounded-xl text-[10px] md:text-sm font-medium border relative z-10"></div>
+
+            <div class="nav-tabs mb-4 p-1">
+                <div class="nav-tab active py-2 md:py-3 text-xs md:text-sm" data-target="tab-deploy">
+                    <i class="fas fa-rocket"></i> Deploy App
+                </div>
+                <div class="nav-tab py-2 md:py-3 text-xs md:text-sm" data-target="tab-manage">
+                    <i class="fas fa-box-open"></i> Manage Project
+                </div>
+            </div>
+
+            <!-- TAB 1: DEPLOY -->
+            <div id="tab-deploy" class="tab-content active relative z-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-5 mb-4">
+                    
+                    <div class="group relative z-40 md:col-span-1">
+                        <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Repository Name <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-book-journal-whills absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                            <input type="text" id="n-repo" autocomplete="off" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-8 input-dark rounded-lg md:rounded-xl mono relative z-20" placeholder="awesome-app">
+                            <i class="fas fa-chevron-down absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] pointer-events-none z-30"></i>
+                            <div id="dropdown-repo" class="absolute left-0 top-full mt-1 w-full bg-[#0a0a0e] border border-teal-500/30 rounded-lg md:rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-y-auto max-h-40 hidden flex-col divide-y divide-white/5 py-1 z-50"></div>
+                        </div>
+                    </div>
+
+                    <!-- Branch -->
+                    <div class="group relative z-30 md:col-span-1">
+                        <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Branch <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-code-branch absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                            <input type="text" id="n-branch" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono relative z-20" value="main">
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings Toggle -->
+                    <div class="md:col-span-2 mt-1 relative z-20">
+                        <button type="button" id="toggle-advanced" class="w-full flex justify-between items-center bg-black/40 border border-slate-700/80 p-2.5 md:p-3.5 rounded-lg md:rounded-xl text-slate-300 text-[10px] md:text-xs font-bold uppercase tracking-wider hover:border-teal-500 transition-colors focus:outline-none group shadow-inner">
+                            <span class="flex items-center gap-2"><i class="fas fa-sliders-h text-teal-500 group-hover:animate-pulse"></i> Advanced Settings (Optional)</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300" id="advanced-icon"></i>
+                        </button>
+                        
+                        <div id="advanced-settings" class="hidden mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-4 bg-black/20 p-3 md:p-4 rounded-lg md:rounded-xl border border-white/5 shadow-inner">
+                            <div class="group md:col-span-2">
+                                <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Project Name</label>
+                                <div class="relative">
+                                    <i class="fas fa-box absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors"></i>
+                                    <input type="text" id="n-project" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="Auto-generate">
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Build Command</label>
+                                <div class="relative">
+                                    <i class="fas fa-terminal absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors pointer-events-none z-10"></i>
+                                    <input type="text" id="n-buildcmd" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="e.g. npm run build">
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Publish Directory</label>
+                                <div class="relative">
+                                    <i class="far fa-folder-open absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors"></i>
+                                    <input type="text" id="n-publishdir" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="e.g. dist or build">
+                                </div>
+                            </div>
+
+                            <div class="group md:col-span-2">
+                                <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Environment Variables</label>
+                                <div class="rounded-lg md:rounded-xl overflow-hidden border border-slate-700/80 group-focus-within:border-teal-500 transition-colors shadow-inner bg-black/60 relative">
+                                    <div class="bg-black px-3 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fas fa-file-code text-teal-500 text-[10px]"></i><span class="text-[9px] md:text-[10px] font-mono text-slate-300">.env</span>
+                                        </div>
+                                    </div>
+                                    <div id="env-lines" class="absolute left-0 top-[28px] bottom-0 w-7 md:w-8 bg-black/40 border-r border-slate-800 flex flex-col items-center py-2 text-[9px] md:text-[10px] font-mono text-slate-600 pointer-events-none select-none overflow-hidden">
+                                        <span>1</span><span>2</span><span>3</span>
+                                    </div>
+                                    <textarea id="n-env" class="w-full p-2 pl-9 md:pl-10 bg-transparent text-emerald-400 mono text-[11px] md:text-[12px] min-h-[60px] md:min-h-[80px] focus:outline-none resize-none placeholder-slate-700 leading-normal" placeholder="API_KEY=secret_value" spellcheck="false"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2.5 md:gap-3 mb-4 relative z-10">
+                    <button type="button" id="btn-test" class="btn-action btn-test sm:w-1/3 text-slate-300 font-bold py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center justify-center gap-1.5 text-[11px] md:text-sm">
+                        <i class="fas fa-satellite-dish text-slate-400 text-xs"></i> <span>Test Access</span>
+                    </button>
+                    <button type="button" id="btn-deploy" class="btn-action btn-deploy sm:w-2/3 text-white font-bold py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center justify-center gap-2 shadow-lg text-xs md:text-sm">
+                        <i class="fas fa-rocket text-sm"></i> <span>Deploy to Netlify</span>
+                    </button>
+                </div>
+
+                <div class="rounded-lg md:rounded-xl overflow-hidden shadow-inner border border-slate-700/50 bg-[#020202] relative z-10">
+                    <div class="bg-[#0a0a0a] border-b border-slate-800 px-3 py-2 flex items-center justify-between">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+                        </div>
+                        <div class="text-[8px] md:text-[9px] mono text-slate-500 font-bold tracking-widest uppercase">Build Console</div>
+                        <div class="w-8"></div>
+                    </div>
+                    <div class="p-2.5 md:p-3 mono text-[9px] md:text-[11px] overflow-y-auto h-40 md:h-56 leading-relaxed scroll-smooth" id="log-container">
+                        <div id="logs" class="flex flex-col gap-1 md:gap-1.5">
+                            <div class="text-slate-500 flex items-start gap-1.5 md:gap-2">
+                                <span class="text-teal-500">❯</span><span>Netlify Deploy Engine (Ultra) initialized.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: MANAGE PROJECT -->
+            <div id="tab-manage" class="tab-content relative z-10">
+                <div class="bg-rose-950/20 border border-rose-900/50 rounded-xl md:rounded-2xl p-3 md:p-5 relative">
+                    <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-rose-500 to-red-600 rounded-l-xl md:rounded-l-2xl"></div>
+                    
+                    <h3 class="text-sm md:text-lg font-bold text-rose-400 mb-0.5 flex items-center gap-2">
+                        <i class="fas fa-skull-crossbones"></i> Delete Project
+                    </h3>
+                    <p class="text-slate-400 text-[10px] md:text-xs mb-3">This action cannot be undone (Permanent).</p>
+                    
+                    <!-- Form Delete -->
+                    <div class="group relative z-50 mb-3">
+                        <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-rose-400 transition-colors">Select Project <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-trash-alt absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-rose-500/50 text-xs md:text-base group-focus-within:text-rose-400 transition-colors z-30"></i>
+                            <select id="n-delete-select" class="w-full py-2.5 md:py-3 pl-8 md:pl-11 pr-8 input-dark rounded-lg md:rounded-xl font-semibold text-slate-200 border-rose-900/50 focus:border-rose-500 text-[11px] md:text-sm relative z-20">
+                                <option value="">Input Token and click 'Load' first...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="btn-trigger-delete" class="w-full btn-action btn-delete text-white font-bold py-2.5 md:py-3.5 rounded-lg md:rounded-xl flex justify-center items-center gap-2 focus:outline-none text-xs md:text-sm" disabled>
+                        <i class="fas fa-trash-alt"></i> Delete Permanently
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Delete -->
+    <div id="modal-delete" class="modal-overlay">
+        <div class="bg-[#0f172a] border border-rose-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 w-[92%] max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.9)] transform scale-95 transition-transform duration-300" id="modal-delete-content">
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-3 border border-rose-500/20">
+                    <i class="fas fa-exclamation-triangle text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-white mb-1">Confirm Deletion</h3>
+                <p class="text-slate-400 text-xs md:text-sm">You are about to delete:</p>
+                <p class="text-rose-400 font-mono font-bold text-sm md:text-lg mt-0.5" id="modal-project-target"></p>
+                <p class="text-slate-300 text-[10px] md:text-xs mt-3 p-2 bg-rose-950/30 rounded border border-rose-900/50">
+                    This action will permanently delete the project and all of its deployments. Continue?
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="btn-cancel-delete" class="flex-1 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg md:rounded-xl transition-colors text-xs md:text-sm">Cancel</button>
+                <button type="button" id="btn-confirm-delete" class="flex-1 py-2 md:py-3 btn-action btn-delete text-white font-bold rounded-lg md:rounded-xl text-xs md:text-sm flex items-center justify-center">Yes, Delete!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOM = {
+            token: document.getElementById('n-token'),
+            toggleToken: document.getElementById('toggle-token'),
+            rememberToken: document.getElementById('remember-token'),
+            btnLoadAccount: document.getElementById('btn-load-account'),
+            alertBox: document.getElementById('alert-box'),
+            
+            navTabs: document.querySelectorAll('.nav-tab'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            
+            owner: document.getElementById('n-owner'),
+            repo: document.getElementById('n-repo'),
+            dropdownRepo: document.getElementById('dropdown-repo'),
+            branch: document.getElementById('n-branch'),
+            project: document.getElementById('n-project'),
+            buildcmd: document.getElementById('n-buildcmd'),
+            publishdir: document.getElementById('n-publishdir'),
+            env: document.getElementById('n-env'),
+            envLines: document.getElementById('env-lines'),
+            btnTest: document.getElementById('btn-test'),
+            btnDeploy: document.getElementById('btn-deploy'),
+            logContainer: document.getElementById('log-container'),
+            logs: document.getElementById('logs'),
+            
+            deleteSelect: document.getElementById('n-delete-select'),
+            btnTriggerDelete: document.getElementById('btn-trigger-delete'),
+            modalDelete: document.getElementById('modal-delete'),
+            modalContent: document.getElementById('modal-delete-content'),
+            modalTarget: document.getElementById('modal-project-target'),
+            btnCancelDel: document.getElementById('btn-cancel-delete'),
+            btnConfirmDel: document.getElementById('btn-confirm-delete')
+        };
+
+        let netlifyProjects = [];
+        let ghPublicReposCache = [];
+
+        // Base64 Obfuscator for Token Storage
+        const obfuscator = {
+            encode: (str) => {
+                if (!str) return '';
+                return btoa(encodeURIComponent(str)).split('').reverse().join('');
+            },
+            decode: (hash) => {
+                if (!hash) return '';
+                try {
+                    return decodeURIComponent(atob(hash.split('').reverse().join('')));
+                } catch (e) { return ''; }
+            }
+        };
+
+        async function fetchGitHubPublicRepos(forceRefresh = false) {
+            const owner = DOM.owner.value.trim();
+            if(!owner || owner === "Awaiting 'Load' button...") return;
+            
+            const cacheKey = `gh_repo_cache_${owner}`;
+            
+            if (!forceRefresh) {
+                const cachedData = sessionStorage.getItem(cacheKey);
+                if (cachedData) {
+                    ghPublicReposCache = JSON.parse(cachedData);
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`https://api.github.com/users/${owner}/repos?per_page=100&sort=updated`);
+                if(res.ok) {
+                    const data = await res.json();
+                    ghPublicReposCache = data.map(r => r.name);
+                    sessionStorage.setItem(cacheKey, JSON.stringify(ghPublicReposCache));
+                }
+            } catch(e) { console.error("Failed loading Github repos", e); }
+        }
+
+        function setupRepoAutocomplete() {
+            const render = () => {
+                if(!ghPublicReposCache || ghPublicReposCache.length === 0) {
+                    DOM.dropdownRepo.classList.add('hidden');
+                    return;
+                }
+                const query = DOM.repo.value.toLowerCase();
+                const filtered = ghPublicReposCache.filter(item => item.toLowerCase().includes(query));
+
+                DOM.dropdownRepo.innerHTML = '';
+                if(filtered.length === 0) {
+                    DOM.dropdownRepo.classList.add('hidden');
+                    return;
+                }
+
+                filtered.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'px-3 md:px-4 py-2 text-[10px] md:text-sm font-mono text-slate-300 hover:bg-teal-500/20 hover:text-white cursor-pointer transition-colors';
+                    div.innerHTML = `<i class="fas fa-book mr-1.5 opacity-50 text-[10px]"></i>${item}`;
+                    
+                    div.addEventListener('click', (e) => { 
+                        e.preventDefault();
+                        e.stopPropagation();
+                        DOM.repo.value = item;
+                        DOM.dropdownRepo.classList.add('hidden');
+                        saveSettings();
+                    });
+                    DOM.dropdownRepo.appendChild(div);
+                });
+                DOM.dropdownRepo.classList.remove('hidden');
+            };
+
+            DOM.repo.addEventListener('focus', () => {
+                if(ghPublicReposCache.length === 0 && DOM.owner.value) fetchGitHubPublicRepos().then(render);
+                else render();
+            });
+            DOM.repo.addEventListener('click', () => {
+                if(ghPublicReposCache.length === 0 && DOM.owner.value) fetchGitHubPublicRepos().then(render);
+                else render();
+            });
+            DOM.repo.addEventListener('input', render);
+            
+            DOM.repo.addEventListener('blur', () => {
+                setTimeout(() => DOM.dropdownRepo.classList.add('hidden'), 250);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = JSON.parse(localStorage.getItem('netlifyDeployerSettingsUltra') || '{}');
+            if (saved.rememberToken && saved.token) {
+                DOM.token.value = obfuscator.decode(saved.token);
+                DOM.rememberToken.checked = true;
+                checkTokenLength();
+            }
+            if (saved.owner) DOM.owner.value = saved.owner;
+            if (saved.repo) DOM.repo.value = saved.repo;
+            if (saved.branch) DOM.branch.value = saved.branch;
+            if (saved.buildcmd) DOM.buildcmd.value = saved.buildcmd;
+            if (saved.publishdir) DOM.publishdir.value = saved.publishdir;
+            if (saved.env) DOM.env.value = saved.env;
+            
+            if(saved.cachedProjects) {
+                netlifyProjects = saved.cachedProjects;
+                renderProjectDropdown();
+            }
+
+            setTimeout(updateEnvTextarea, 50); 
+            setupRepoAutocomplete();
+            
+            // UI Events
+            DOM.token.addEventListener('input', checkTokenLength);
+            DOM.btnLoadAccount.addEventListener('click', loadProjects);
+            
+            DOM.toggleToken.addEventListener('click', () => {
+                const isPass = DOM.token.type === 'password';
+                DOM.token.type = isPass ? 'text' : 'password';
+                DOM.toggleToken.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+                DOM.toggleToken.classList.toggle('text-teal-400', isPass);
+            });
+
+            const toggleAdvancedBtn = document.getElementById('toggle-advanced');
+            if (toggleAdvancedBtn) {
+                toggleAdvancedBtn.addEventListener('click', () => {
+                    document.getElementById('advanced-settings').classList.toggle('hidden');
+                    document.getElementById('advanced-icon').classList.toggle('rotate-180');
+                });
+            }
+
+            DOM.env.addEventListener('input', updateEnvTextarea);
+            window.addEventListener('resize', updateEnvTextarea);
+
+            // Tabs
+            DOM.navTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    DOM.navTabs.forEach(t => t.classList.remove('active'));
+                    DOM.tabContents.forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.target).classList.add('active');
+                    hideAlert();
+                });
+            });
+
+            const inputs = [DOM.token, DOM.rememberToken, DOM.repo, DOM.branch, DOM.buildcmd, DOM.publishdir, DOM.env];
+            inputs.forEach(el => el.addEventListener('change', saveSettings));
+
+            // Core Action Buttons
+            DOM.btnTest.addEventListener('click', testConnection);
+            DOM.btnDeploy.addEventListener('click', startDeployment);
+            
+            // Delete UI Events
+            DOM.deleteSelect.addEventListener('change', () => {
+                DOM.btnTriggerDelete.disabled = !DOM.deleteSelect.value;
+            });
+            
+            DOM.btnTriggerDelete.addEventListener('click', () => {
+                const selectedId = DOM.deleteSelect.value;
+                const selectedProj = netlifyProjects.find(p => String(p.id) === String(selectedId));
+                if (!selectedProj) {
+                    showAlert("Silakan pilih Project yang valid terlebih dahulu.", "error");
+                    return;
+                }
+                DOM.modalTarget.textContent = selectedProj.name;
+                DOM.modalDelete.classList.add('active');
+                DOM.modalContent.classList.replace('scale-95', 'scale-100');
+            });
+            
+            DOM.btnCancelDel.addEventListener('click', () => {
+                DOM.modalContent.classList.replace('scale-100', 'scale-95');
+                setTimeout(() => DOM.modalDelete.classList.remove('active'), 200);
+            });
+            DOM.btnConfirmDel.addEventListener('click', deleteProject);
+        });
+
+        function checkTokenLength() {
+            DOM.btnLoadAccount.classList.toggle('hidden', DOM.token.value.trim().length <= 15);
+        }
+
+        function updateEnvTextarea() {
+            DOM.env.style.height = 'auto';
+            DOM.env.style.height = DOM.env.scrollHeight + 'px';
+            const linesCount = DOM.env.value.split('\n').length;
+            const minLines = Math.max(3, linesCount);
+            let linesHtml = '';
+            for(let i = 1; i <= minLines; i++) linesHtml += `<span>${i}</span>`;
+            DOM.envLines.innerHTML = linesHtml;
+        }
+
+        function saveSettings() {
+            const settings = {
+                rememberToken: DOM.rememberToken.checked,
+                token: DOM.rememberToken.checked ? obfuscator.encode(DOM.token.value.trim()) : '',
+                owner: DOM.owner.value.trim(),
+                repo: DOM.repo.value.trim(),
+                branch: DOM.branch.value.trim(),
+                buildcmd: DOM.buildcmd.value.trim(),
+                publishdir: DOM.publishdir.value.trim(),
+                env: DOM.env.value,
+                cachedProjects: netlifyProjects
+            };
+            localStorage.setItem('netlifyDeployerSettingsUltra', JSON.stringify(settings));
+        }
+
+        function showAlert(message, type = 'error') {
+            const bg = type === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-teal-500/10 border-teal-500/30 text-teal-400';
+            const icon = type === 'error' ? 'fa-times-circle' : 'fa-check-circle';
+            DOM.alertBox.className = `mt-1 mb-4 p-2.5 md:p-3 rounded-lg md:rounded-xl text-[10px] md:text-xs font-medium border flex items-start gap-2 shadow-inner relative z-10 ${bg}`;
+            DOM.alertBox.innerHTML = `<i class="fas ${icon} mt-0.5 text-sm"></i> <div class="flex-1">${message}</div>`;
+            DOM.alertBox.classList.remove('hidden');
+            if (type === 'success') setTimeout(hideAlert, 6000);
+        }
+        function hideAlert() { DOM.alertBox.classList.add('hidden'); }
+
+        function log(message, type = 'info') {
+            const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const time = `<span class="text-slate-600 select-none">[${timeStr}]</span>`;
+            let prefix = `<span class="text-teal-400 select-none">❯</span>`;
+            let colorClass = 'text-slate-300';
+            
+            if (type === 'success') { prefix = `<span class="text-emerald-400 select-none">✔</span>`; colorClass = 'text-emerald-300 font-medium'; } 
+            else if (type === 'error') { prefix = `<span class="text-rose-500 select-none">✖</span>`; colorClass = 'text-rose-400 font-medium'; } 
+            else if (type === 'warn') { prefix = `<span class="text-amber-400 select-none">⚠</span>`; colorClass = 'text-amber-300'; }
+
+            if (type === 'raw') {
+                const div = document.createElement('div'); div.className = 'w-full mt-1 mb-1'; div.innerHTML = message; DOM.logs.appendChild(div);
+            } else {
+                const div = document.createElement('div'); div.className = `${colorClass} flex gap-1.5 md:gap-2 items-start`;
+                div.innerHTML = `${time} ${prefix} <div class="flex-1 break-words">${message}</div>`; DOM.logs.appendChild(div);
+            }
+            DOM.logContainer.scrollTo({ top: DOM.logContainer.scrollHeight, behavior: 'smooth' });
+        }
+
+        function renderProjectDropdown() {
+            if(netlifyProjects.length === 0) {
+                DOM.deleteSelect.innerHTML = '<option value="">No projects found</option>';
+                return;
+            }
+            DOM.deleteSelect.innerHTML = '<option value="">-- Select Project to Delete --</option>';
+            netlifyProjects.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                DOM.deleteSelect.appendChild(opt);
+            });
+        }
+
+        async function loadProjects() {
+            const token = DOM.token.value.trim();
+            if (!token) return showAlert("Please enter Netlify Token.", "error");
+
+            hideAlert();
+            const ogHtml = DOM.btnLoadAccount.innerHTML;
+            DOM.btnLoadAccount.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            DOM.btnLoadAccount.disabled = true;
+
+            let userSlug = null;
+            let githubNamespace = null;
+
+            try {
+                // 1. Get Netlify User Avatar & Data
+                try {
+                    const userRes = await fetch("https://api.netlify.com/api/v1/user", { headers: { "Authorization": `Bearer ${token}` } });
+                    if (userRes.ok) {
+                        const userData = await userRes.json();
+                        if (userData && userData.avatar_url) {
+                            document.getElementById('user-avatar').src = userData.avatar_url;
+                            
+                            // STRATEGI 1: Lacak ID murni dari Avatar GitHub (Reverse-Engineering)
+                            if (userData.avatar_url.includes('avatars.githubusercontent.com/u/')) {
+                                const match = userData.avatar_url.match(/\/u\/(\d+)/);
+                                if (match && match[1]) {
+                                    try {
+                                        const ghRes = await fetch(`https://api.github.com/user/${match[1]}`);
+                                        if (ghRes.ok) {
+                                            const ghData = await ghRes.json();
+                                            if (ghData.login) githubNamespace = ghData.login;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                        
+                        // STRATEGI 2: Cek akun yang di-link langsung dari respon Netlify (Hidden Providers)
+                        if (!githubNamespace && userData.connected_accounts) {
+                            const ghKeys = Object.keys(userData.connected_accounts).filter(k => k.toLowerCase().includes('github'));
+                            if (ghKeys.length > 0) {
+                                const ghData = userData.connected_accounts[ghKeys[0]];
+                                if (typeof ghData === 'string') githubNamespace = ghData;
+                                else if (ghData && ghData.name) githubNamespace = ghData.name;
+                            }
+                        }
+
+                        if (userData && userData.slug) {
+                            userSlug = userData.slug;
+                        }
+                    }
+                } catch(e) { }
+
+                // STRATEGI 3: Verifikasi "slug" Netlify ke API GitHub secara paksa
+                if (!githubNamespace && userSlug) {
+                    try {
+                        const ghRes = await fetch(`https://api.github.com/users/${userSlug}`);
+                        if (ghRes.ok) {
+                            const ghData = await ghRes.json();
+                            if (ghData.login) githubNamespace = ghData.login;
+                        }
+                    } catch(e) {}
+                }
+
+                // 2. Load Sites
+                const res = await fetch("https://api.netlify.com/api/v1/sites", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Failed to load projects. Check token.");
+                
+                const data = await res.json();
+                netlifyProjects = data.map(p => ({ id: p.id, name: p.name }));
+
+                // STRATEGI 4: Baca dari history deploy Netlify (Fallback terakhir)
+                if (!githubNamespace) {
+                    for (const site of data) {
+                        if (site.build_settings && site.build_settings.provider === 'github' && site.build_settings.repo_path) {
+                            githubNamespace = site.build_settings.repo_path.split('/')[0];
+                            break;
+                        }
+                    }
+                }
+
+                if (githubNamespace) {
+                    DOM.owner.value = githubNamespace;
+                    fetchGitHubPublicRepos(true); 
+                } else {
+                    DOM.owner.value = "";
+                    DOM.owner.placeholder = "Auto-detect gagal. Harap pastikan akun terhubung.";
+                }
+                
+                renderProjectDropdown();
+                DOM.btnTriggerDelete.disabled = true;
+                saveSettings();
+                
+                showAlert(`Successfully loaded ${netlifyProjects.length} sites. Connected Github: <strong>${githubNamespace || 'Failed'}</strong>`, "success");
+            } catch (err) { showAlert(err.message, "error"); } 
+            finally { DOM.btnLoadAccount.innerHTML = ogHtml; DOM.btnLoadAccount.disabled = false; }
+        }
+
+        async function deleteProject() {
+            const token = DOM.token.value.trim();
+            const selectedId = DOM.deleteSelect.value;
+            const selectedProj = netlifyProjects.find(p => String(p.id) === String(selectedId));
+            
+            if (!token || !selectedProj) return;
+
+            const ogHtml = DOM.btnConfirmDel.innerHTML;
+            DOM.btnConfirmDel.innerHTML = `<div class="spinner"></div>`;
+            DOM.btnConfirmDel.disabled = true;
+            DOM.btnCancelDel.disabled = true;
+
+            try {
+                const res = await fetch(`https://api.netlify.com/api/v1/sites/${selectedId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                
+                if (!res.ok && res.status !== 204) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || "Failed to delete project on Netlify.");
+                }
+                
+                netlifyProjects = netlifyProjects.filter(p => String(p.id) !== String(selectedId));
+                renderProjectDropdown();
+                DOM.btnTriggerDelete.disabled = true;
+                saveSettings();
+                
+                DOM.modalContent.classList.replace('scale-100', 'scale-95');
+                setTimeout(() => DOM.modalDelete.classList.remove('active'), 200);
+                
+                showAlert(`Project <strong class="text-white">${selectedProj.name}</strong> deleted successfully.`, "success");
+                
+            } catch (err) {
+                DOM.modalContent.classList.replace('scale-100', 'scale-95');
+                setTimeout(() => DOM.modalDelete.classList.remove('active'), 200);
+                showAlert(err.message, "error");
+            } finally {
+                DOM.btnConfirmDel.innerHTML = 'Yes, Delete!';
+                DOM.btnConfirmDel.disabled = false;
+                DOM.btnCancelDel.disabled = false;
+            }
+        }
+
+        async function testConnection() {
+            const token = DOM.token.value.trim();
+            const owner = DOM.owner.value.trim();
+            const repo = DOM.repo.value.trim();
+
+            if (!token || !owner || !repo) return log("Token, Owner, and Repo are required!", "error");
+            saveSettings();
+            
+            log(`<div class="border-t border-slate-800/80 w-full my-1"></div>`, 'raw');
+            log("Starting Access Test...", "info");
+            
+            const ogHtml = DOM.btnTest.innerHTML;
+            DOM.btnTest.innerHTML = `<div class="spinner"></div>`;
+            DOM.btnTest.disabled = true;
+
+            try {
+                const vRes = await fetch("https://api.netlify.com/api/v1/user", { headers: { "Authorization": `Bearer ${token}` } });
+                if (!vRes.ok) throw new Error("Invalid Netlify Token.");
+                log("Netlify token valid.", "success");
+
+                const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+                if (!ghRes.ok) {
+                    if (ghRes.status === 404) log("GitHub Repo returned 404 (Likely Private). Must ensure GitHub App is installed in Netlify.", "warn");
+                    else log(`GitHub API returned: ${ghRes.statusText}`, "warn");
+                } else {
+                    const ghData = await ghRes.json();
+                    log(`GitHub Repo public/accessible. [ID: ${ghData.id}]`, "success");
+                }
+            } catch (err) { log(err.message, "error"); } 
+            finally { DOM.btnTest.innerHTML = ogHtml; DOM.btnTest.disabled = false; }
+        }
+
+        async function startDeployment() {
+            const token = DOM.token.value.trim();
+            const owner = DOM.owner.value.trim();
+            const repo = DOM.repo.value.trim();
+            const branch = DOM.branch.value.trim() || 'main';
+            
+            if (!token || !owner || !repo) return log("Token, Owner, and Repo are required!", "error");
+            
+            let projectName = DOM.project.value.trim();
+            if (!projectName) {
+                projectName = repo.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+                DOM.project.value = projectName;
+            }
+
+            saveSettings();
+            
+            log(`<div class="border-t border-slate-800/80 w-full my-2"></div>`, 'raw');
+            log(`[START] Deploying: <span class="text-white font-bold">${projectName}</span>`, "info");
+            
+            const ogHtml = DOM.btnDeploy.innerHTML;
+            DOM.btnDeploy.innerHTML = `<div class="spinner"></div> <span class="ml-2 font-bold tracking-widest uppercase text-[10px] md:text-xs">Building...</span>`;
+            DOM.btnDeploy.disabled = true;
+
+            try {
+                const envStr = DOM.env.value.trim();
+                const envObj = {};
+                if (envStr) {
+                    envStr.split('\n').forEach(line => {
+                        const match = line.match(/^([^=]+)=(.*)$/);
+                        if (match) {
+                            let key = match[1].trim();
+                            let val = match[2].trim();
+                            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                                val = val.substring(1, val.length - 1);
+                            }
+                            envObj[key] = val;
+                        }
+                    });
+                }
+
+                // Get GH repo ID to link
+                let repoId = null;
+                log("Fetching GitHub Repo ID...", "info");
+                try {
+                    const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+                    if (ghRes.ok) {
+                        const ghData = await ghRes.json();
+                        repoId = parseInt(ghData.id);
+                    }
+                } catch(e) { }
+
+                // CREATE OR UPDATE SITE
+                log("Configuring Site on Netlify...", "info");
+                
+                const sitePayload = {
+                    name: projectName,
+                };
+                
+                // If repo is accessible, inject repo settings
+                if (repoId) {
+                    sitePayload.repo = {
+                        provider: "github",
+                        id: repoId,
+                        repo: `${owner}/${repo}`,
+                        private: false,
+                        branch: branch
+                    };
+                    if (DOM.buildcmd.value.trim()) sitePayload.repo.cmd = DOM.buildcmd.value.trim();
+                    if (DOM.publishdir.value.trim()) sitePayload.repo.dir = DOM.publishdir.value.trim();
+                }
+
+                if (Object.keys(envObj).length > 0) {
+                    sitePayload.build_settings = { env: envObj };
+                }
+
+                const createRes = await fetch("https://api.netlify.com/api/v1/sites", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(sitePayload)
+                });
+
+                if (!createRes.ok) {
+                    const errData = await createRes.json();
+                    throw new Error(`Netlify Error: ${errData.message || 'Failed to create site'}`);
+                }
+
+                const siteData = await createRes.json();
+                const siteId = siteData.id;
+                
+                log(`Site configured. ID: <span class="text-teal-400">${siteId}</span>`, "success");
+                
+                // Add to local project list
+                if (!netlifyProjects.some(p => p.id === siteId)) {
+                    netlifyProjects.push({ id: siteId, name: siteData.name });
+                    renderProjectDropdown();
+                    saveSettings();
+                }
+
+                // If no repo ID was provided (repo is private/inaccessible via API), we can't trigger an automatic build this way easily.
+                if (!repoId) {
+                    log("Warning: Could not link Repo via API (Might be private or token issue). Visit Netlify Dashboard to link manually.", "warn");
+                    throw new Error("Repository linking failed.");
+                }
+
+                // Polling Status
+                log("Waiting for build to start...", "info");
+                
+                let status = "enqueued";
+                let attempts = 0;
+                let activeDeploy = null;
+                
+                while (status !== "ready" && status !== "error" && attempts < 150) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 4000));
+                    
+                    const depRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    
+                    if (!depRes.ok) continue; 
+                    const deploysData = await depRes.json();
+                    
+                    if (deploysData && deploysData.length > 0) {
+                        activeDeploy = deploysData[0];
+                        
+                        if (activeDeploy.state !== status) {
+                            status = activeDeploy.state;
+                            if (status === 'building') log(`Status: <span class="text-amber-400 font-bold animate-pulse">⚙ BUILDING...</span>`);
+                            else if (status === 'enqueued') log(`Status: <span class="text-slate-300 uppercase">QUEUED</span>`);
+                            else log(`Status: <span class="text-slate-300 uppercase">${status}</span>`);
+                        }
+                    } else if (attempts > 5) {
+                        // Netlify takes a moment to register the webhook and start the first deploy
+                        if(attempts % 5 === 0) log("Still waiting for build trigger...", "info");
+                    }
+                }
+
+                if (status === "ready") {
+                    let url = siteData.ssl_url || siteData.url;
+                    log("DEPLOYMENT SUCCESSFUL", "success");
+                    log(`
+                        <div class="mt-2 mb-1 p-3 border border-teal-500/30 bg-teal-950/20 rounded-lg shadow-inner">
+                            <div class="mb-2 border-b border-teal-900/50 pb-2 text-teal-400 font-bold flex items-center gap-1.5 text-[11px] md:text-sm">
+                                <i class="fas fa-check-circle"></i> App is Live
+                            </div>
+                            <div class="space-y-2 font-sans">
+                                <a href="${url}" target="_blank" class="text-white hover:text-teal-300 font-medium break-all flex items-center gap-1.5 group w-max transition-colors text-[11px] md:text-sm">
+                                    <i class="fas fa-globe text-teal-500"></i> <span class="border-b border-transparent group-hover:border-teal-300 pb-0.5">${url}</span> 
+                                </a>
+                            </div>
+                        </div>
+                    `, "raw");
+                } 
+                else if (status === "error") {
+                    let errorMsg = `Deployment failed (Status: ERROR).`;
+                    if (activeDeploy && activeDeploy.error_message) {
+                        log(`<span class="text-rose-400 font-mono text-[10px] break-all">Reason: ${activeDeploy.error_message}</span>`, "raw");
+                    }
+                    if (activeDeploy && activeDeploy.deploy_ssl_url) {
+                         log(`
+                            <div class="mt-1 mb-1 p-2 border border-rose-500/30 bg-rose-950/20 rounded-lg">
+                                <a href="https://app.netlify.com/sites/${siteData.name}/deploys/${activeDeploy.id}" target="_blank" class="text-rose-300 underline hover:text-rose-200 text-[10px] md:text-xs">
+                                    <i class="fas fa-external-link-alt mr-1"></i> View Full Logs in Netlify
+                                </a>
+                            </div>
+                        `, "raw");
+                    }
+                    throw new Error(errorMsg);
+                } 
+                else if (attempts >= 150) throw new Error("Timeout: Build exceeded limit.");
+                else throw new Error(`Deployment failed (Status: ${status})`);
+
+            } catch (err) {
+                log(err.message, "error");
+            } finally {
+                DOM.btnDeploy.innerHTML = `<i class="fas fa-rocket"></i> <span>Deploy to Netlify</span>`;
+                DOM.btnDeploy.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
