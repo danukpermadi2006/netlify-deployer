@@ -184,7 +184,7 @@
 
         <div class="p-3 md:p-6 pt-3 md:pt-5 relative">
             
-            <!-- [DIKEMBALIKAN] Info Keamanan & Cara Dapat Token -->
+            <!-- Info Keamanan & Cara Dapat Token -->
             <div class="bg-black/40 border border-amber-500/20 rounded-lg p-2.5 md:p-4 mb-4 shadow-inner relative overflow-hidden">
                 <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500"></div>
                 <div class="flex items-start gap-2 md:gap-4">
@@ -238,21 +238,6 @@
                         <span class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-500 border border-r-0 border-slate-700/80 group-focus-within:border-teal-500 transition-colors rounded-l-lg md:rounded-l-xl"><i class="fas fa-key text-xs md:text-base"></i></span>
                         <input type="password" id="n-token" class="flex-1 w-full px-2 md:px-4 py-2 md:py-3 input-dark !border-x-0 mono tracking-wider" placeholder="nfp_...">
                         <button type="button" id="toggle-token" class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors border border-l-0 border-slate-700/80 group-focus-within:border-teal-500 focus:outline-none rounded-r-lg md:rounded-r-xl">
-                            <i class="fas fa-eye text-xs md:text-base"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- [PERBAIKAN GitHub API] Kolom Input GitHub Token -->
-                <div class="md:col-span-2 group">
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider group-focus-within:text-teal-400 transition-colors">GitHub Token <span class="text-slate-500 font-normal normal-case ml-1">(Opsional u/ Repo Private & Limit API)</span></label>
-                        <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" class="text-[9px] md:text-xs text-teal-500 hover:text-teal-400 transition-colors flex items-center gap-1"><i class="fas fa-external-link-alt"></i> Buat Token</a>
-                    </div>
-                    <div class="flex rounded-lg md:rounded-xl shadow-sm relative z-10">
-                        <span class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-500 border border-r-0 border-slate-700/80 group-focus-within:border-teal-500 transition-colors rounded-l-lg md:rounded-l-xl"><i class="fab fa-github text-xs md:text-base"></i></span>
-                        <input type="password" id="gh-token" class="flex-1 w-full px-2 md:px-4 py-2 md:py-3 input-dark !border-x-0 mono tracking-wider" placeholder="ghp_...">
-                        <button type="button" id="toggle-gh-token" class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors border border-l-0 border-slate-700/80 group-focus-within:border-teal-500 focus:outline-none rounded-r-lg md:rounded-r-xl">
                             <i class="fas fa-eye text-xs md:text-base"></i>
                         </button>
                     </div>
@@ -341,7 +326,6 @@
                                             <i class="fas fa-file-code text-teal-500 text-[10px]"></i><span class="text-[9px] md:text-[10px] font-mono text-slate-300">.env</span>
                                         </div>
                                     </div>
-                                    <!-- Menambahkan overflow-hidden agar clip scroll -->
                                     <div class="absolute left-0 top-[28px] bottom-0 w-7 md:w-8 bg-black/40 border-r border-slate-800 overflow-hidden pointer-events-none select-none">
                                         <div id="env-lines" class="flex flex-col items-center py-2 text-[9px] md:text-[10px] font-mono text-slate-600">
                                             <span>1</span><span>2</span><span>3</span>
@@ -445,8 +429,6 @@
         const DOM = {
             token: document.getElementById('n-token'),
             toggleToken: document.getElementById('toggle-token'),
-            ghToken: document.getElementById('gh-token'),
-            toggleGhToken: document.getElementById('toggle-gh-token'),
             rememberToken: document.getElementById('remember-token'),
             btnLoadAccount: document.getElementById('btn-load-account'),
             alertBox: document.getElementById('alert-box'),
@@ -497,9 +479,7 @@
             const owner = DOM.owner.value.trim();
             if(!owner || owner === "Awaiting 'Load' button...") return;
             
-            const ghTokenStr = DOM.ghToken.value.trim();
-            const cacheKey = `gh_repo_cache_${owner}_${ghTokenStr ? 'auth' : 'anon'}`;
-            const headers = ghTokenStr ? { "Authorization": `token ${ghTokenStr}` } : {};
+            const cacheKey = `gh_repo_cache_${owner}`;
             
             if (!forceRefresh) {
                 const cachedData = sessionStorage.getItem(cacheKey);
@@ -514,7 +494,7 @@
                 let allRepos = [];
                 // Looping pagination untuk bypass batasan 100 limit GitHub API
                 while(true) {
-                    const res = await fetch(`https://api.github.com/users/${owner}/repos?per_page=100&page=${page}&sort=updated`, { headers });
+                    const res = await fetch(`https://api.github.com/users/${owner}/repos?per_page=100&page=${page}&sort=updated`);
                     if(!res.ok) break;
                     
                     const data = await res.json();
@@ -584,7 +564,6 @@
             const saved = JSON.parse(localStorage.getItem('netlifyDeployerSettingsUltra') || '{}');
             if (saved.rememberToken) {
                 if (saved.token) DOM.token.value = obfuscator.decode(saved.token);
-                if (saved.ghToken) DOM.ghToken.value = obfuscator.decode(saved.ghToken);
                 DOM.rememberToken.checked = true;
                 checkTokenLength();
             }
@@ -613,13 +592,6 @@
                 DOM.toggleToken.classList.toggle('text-teal-400', isPass);
             });
 
-            DOM.toggleGhToken.addEventListener('click', () => {
-                const isPass = DOM.ghToken.type === 'password';
-                DOM.ghToken.type = isPass ? 'text' : 'password';
-                DOM.toggleGhToken.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
-                DOM.toggleGhToken.classList.toggle('text-teal-400', isPass);
-            });
-
             const toggleAdvancedBtn = document.getElementById('toggle-advanced');
             if (toggleAdvancedBtn) {
                 toggleAdvancedBtn.addEventListener('click', () => {
@@ -631,7 +603,6 @@
             DOM.env.addEventListener('input', updateEnvTextarea);
             window.addEventListener('resize', updateEnvTextarea);
             
-            // [UI FIX] Sinkronisasi scroll teks area Environment Variable
             DOM.env.addEventListener('scroll', () => {
                 DOM.envLines.style.transform = `translateY(-${DOM.env.scrollTop}px)`;
             });
@@ -646,7 +617,7 @@
                 });
             });
 
-            const inputs = [DOM.token, DOM.ghToken, DOM.rememberToken, DOM.repo, DOM.branch, DOM.buildcmd, DOM.publishdir, DOM.env];
+            const inputs = [DOM.token, DOM.rememberToken, DOM.repo, DOM.branch, DOM.buildcmd, DOM.publishdir, DOM.env];
             inputs.forEach(el => el.addEventListener('change', saveSettings));
 
             DOM.btnTest.addEventListener('click', testConnection);
@@ -693,7 +664,6 @@
             const settings = {
                 rememberToken: DOM.rememberToken.checked,
                 token: DOM.rememberToken.checked ? obfuscator.encode(DOM.token.value.trim()) : '',
-                ghToken: DOM.rememberToken.checked ? obfuscator.encode(DOM.ghToken.value.trim()) : '',
                 owner: DOM.owner.value.trim(),
                 repo: DOM.repo.value.trim(),
                 branch: DOM.branch.value.trim(),
@@ -769,7 +739,6 @@
                     if (userRes.ok) {
                         const userData = await userRes.json();
                         if (userData && userData.avatar_url) {
-                            // Avatar tidak diubah, tetap pakai default
                             document.getElementById('user-avatar').src = userData.avatar_url;
                             
                             if (userData.avatar_url.includes('avatars.githubusercontent.com/u/')) {
@@ -895,7 +864,6 @@
 
         async function testConnection() {
             const token = DOM.token.value.trim();
-            const ghTokenStr = DOM.ghToken.value.trim();
             const owner = DOM.owner.value.trim();
             const repo = DOM.repo.value.trim();
 
@@ -914,14 +882,13 @@
                 if (!vRes.ok) throw new Error("Invalid Netlify Token.");
                 log("Netlify token valid.", "success");
 
-                const ghHeaders = ghTokenStr ? { "Authorization": `token ${ghTokenStr}` } : {};
-                const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders });
+                const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
                 
                 if (!ghRes.ok) {
                     if (ghRes.status === 404) {
-                        log("GitHub Repo returned 404 (Repo Private atau tidak ada). Pastikan Token GitHub terisi dengan scope 'repo'.", "warn");
-                    } else if (ghRes.status === 401) {
-                        log("GitHub Token ditolak (401 Unauthorized). Cek kembali token Anda.", "warn");
+                        log("GitHub Repo returned 404 (Repo Private atau tidak ada).", "warn");
+                    } else if (ghRes.status === 403) {
+                        log("GitHub API Limit reached (403).", "warn");
                     } else {
                         log(`GitHub API returned: ${ghRes.statusText}`, "warn");
                     }
@@ -935,7 +902,6 @@
 
         async function startDeployment() {
             const token = DOM.token.value.trim();
-            const ghTokenStr = DOM.ghToken.value.trim();
             const owner = DOM.owner.value.trim();
             const repo = DOM.repo.value.trim();
             const branch = DOM.branch.value.trim() || 'main';
@@ -981,8 +947,7 @@
                 let repoId = null;
                 log("Fetching GitHub Repo ID...", "info");
                 try {
-                    const ghHeaders = ghTokenStr ? { "Authorization": `token ${ghTokenStr}` } : {};
-                    const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders });
+                    const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
                     if (ghRes.ok) {
                         const ghData = await ghRes.json();
                         repoId = parseInt(ghData.id);
@@ -1034,7 +999,7 @@
                 }
 
                 if (!repoId) {
-                    log("Warning: Could not link Repo via API (Mungkin Private/Token salah). Hubungkan manual di Dashboard Netlify.", "warn");
+                    log("Warning: Could not link Repo via API (Mungkin Private/Limit API). Hubungkan manual di Dashboard Netlify.", "warn");
                     throw new Error("Repository linking failed.");
                 }
 
