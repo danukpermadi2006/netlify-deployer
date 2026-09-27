@@ -5,16 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Netlify DirectDeploy</title>
     
-    <!-- [PERBAIKAN PERFORMA - Opsi #3] 
-         Gunakan file CSS statis yang sudah dikompilasi untuk Production agar loading website cepat dan tidak ada FOUC (Flash of Unstyled Content).
-         Panduan kompilasi: npx tailwindcss -i ./input.css -o ./output.css --watch 
-    -->
+    <!-- [PERBAIKAN PERFORMA] Gunakan file CSS statis untuk Production -->
     <link rel="stylesheet" href="output.css">
     
-    <!-- [HANYA UNTUK DEVELOPMENT] 
-         Jika Anda belum mengompilasi Tailwind CLI, aktifkan script CDN di bawah ini (hapus tanda komentar). 
-         Sangat TIDAK disarankan untuk Production!
-    -->
+    <!-- [HANYA UNTUK DEVELOPMENT] Aktifkan script CDN ini jika CSS di atas belum di-build -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -190,6 +184,41 @@
 
         <div class="p-3 md:p-6 pt-3 md:pt-5 relative">
             
+            <!-- [DIKEMBALIKAN] Info Keamanan & Cara Dapat Token -->
+            <div class="bg-black/40 border border-amber-500/20 rounded-lg p-2.5 md:p-4 mb-4 shadow-inner relative overflow-hidden">
+                <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500"></div>
+                <div class="flex items-start gap-2 md:gap-4">
+                    <div class="bg-amber-500/10 p-1 md:p-2 rounded-md text-amber-400 shrink-0 mt-0.5 hidden sm:block">
+                        <i class="fas fa-shield-halved text-sm md:text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-[10px] md:text-sm text-slate-300 leading-tight w-full">
+                        <details class="group">
+                            <summary class="font-bold text-white mb-0.5 cursor-pointer flex justify-between items-center outline-none select-none">
+                                <span class="flex items-center gap-1.5 hover:text-amber-300 transition-colors">
+                                    <i class="fas fa-info-circle text-amber-400 sm:hidden"></i> Info Keamanan & Cara Dapat Token
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 group-open:rotate-180"></i>
+                            </summary>
+                            
+                            <div class="mt-2.5 space-y-2 text-slate-400 border-t border-amber-500/20 pt-2.5 pb-1">
+                                <p class="mb-1.5">Aplikasi ini membutuhkan <strong>Netlify Personal Access Token</strong>. Ikuti langkah mudah ini untuk mendapatkannya:</p>
+                                <ol class="list-decimal list-outside ml-4 space-y-2 marker:text-amber-500/70">
+                                    <li>Buka halaman pengaturan token di <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" class="text-teal-400 font-semibold hover:text-teal-300 transition-colors">app.netlify.com <i class="fas fa-external-link-alt text-[8px] ml-0.5"></i></a>.</li>
+                                    <li>Klik tombol <strong>New access token</strong>.</li>
+                                    <li>Isi deskripsi (contoh: "Web Deployer") dan klik tombol <strong>Generate token</strong>.</li>
+                                    <li>Salin (<em>copy</em>) kode rahasia yang muncul <span class="text-rose-400">(Token ini hanya muncul sekali!)</span>.</li>
+                                    <li>Tempelkan (<em>paste</em>) kode tersebut ke kolom <strong>Netlify Token</strong> di bawah ini.</li>
+                                </ol>
+                                <div class="bg-black/50 p-2 rounded border border-white/5 mt-3 flex gap-2 items-center">
+                                    <i class="fas fa-lock text-slate-500 shrink-0"></i>
+                                    <p class="text-[9px] md:text-xs text-slate-500 leading-tight"><strong>Catatan Keamanan:</strong> Kami menggunakan sistem API resmi. Token Anda disandikan (obfuscated) dan hanya disimpan secara lokal di dalam browser perangkat Anda.</p>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-5 mb-4 pb-4 border-b border-white/5">
                 
                 <div class="md:col-span-2 group">
@@ -214,7 +243,7 @@
                     </div>
                 </div>
 
-                <!-- [PERBAIKAN GitHub API - Opsi #2] Kolom Input GitHub Token -->
+                <!-- [PERBAIKAN GitHub API] Kolom Input GitHub Token -->
                 <div class="md:col-span-2 group">
                     <div class="flex justify-between items-center mb-1">
                         <label class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider group-focus-within:text-teal-400 transition-colors">GitHub Token <span class="text-slate-500 font-normal normal-case ml-1">(Opsional u/ Repo Private & Limit API)</span></label>
@@ -312,8 +341,11 @@
                                             <i class="fas fa-file-code text-teal-500 text-[10px]"></i><span class="text-[9px] md:text-[10px] font-mono text-slate-300">.env</span>
                                         </div>
                                     </div>
-                                    <div id="env-lines" class="absolute left-0 top-[28px] bottom-0 w-7 md:w-8 bg-black/40 border-r border-slate-800 flex flex-col items-center py-2 text-[9px] md:text-[10px] font-mono text-slate-600 pointer-events-none select-none overflow-hidden">
-                                        <span>1</span><span>2</span><span>3</span>
+                                    <!-- Menambahkan overflow-hidden agar clip scroll -->
+                                    <div class="absolute left-0 top-[28px] bottom-0 w-7 md:w-8 bg-black/40 border-r border-slate-800 overflow-hidden pointer-events-none select-none">
+                                        <div id="env-lines" class="flex flex-col items-center py-2 text-[9px] md:text-[10px] font-mono text-slate-600">
+                                            <span>1</span><span>2</span><span>3</span>
+                                        </div>
                                     </div>
                                     <textarea id="n-env" class="w-full p-2 pl-9 md:pl-10 bg-transparent text-emerald-400 mono text-[11px] md:text-[12px] min-h-[60px] md:min-h-[80px] focus:outline-none resize-none placeholder-slate-700 leading-normal" placeholder="API_KEY=secret_value" spellcheck="false"></textarea>
                                 </div>
@@ -461,7 +493,6 @@
             }
         };
 
-        // [PERBAIKAN GitHub API - Opsi #2] Menambahkan Token Authorization dan Limit Pagination
         async function fetchGitHubPublicRepos(forceRefresh = false) {
             const owner = DOM.owner.value.trim();
             if(!owner || owner === "Awaiting 'Load' button...") return;
@@ -481,7 +512,7 @@
             try {
                 let page = 1;
                 let allRepos = [];
-                // Looping pagination (dibatasi 5 page = 500 repo agar tidak infinite loop)
+                // Looping pagination untuk bypass batasan 100 limit GitHub API
                 while(true) {
                     const res = await fetch(`https://api.github.com/users/${owner}/repos?per_page=100&page=${page}&sort=updated`, { headers });
                     if(!res.ok) break;
@@ -492,7 +523,7 @@
                     allRepos = allRepos.concat(data.map(r => r.name));
                     if(data.length < 100) break;
                     page++;
-                    if(page > 5) break; 
+                    if(page > 5) break; // Hard limit agar tidak looping tak terbatas
                 }
                 
                 if (allRepos.length > 0) {
@@ -599,6 +630,11 @@
 
             DOM.env.addEventListener('input', updateEnvTextarea);
             window.addEventListener('resize', updateEnvTextarea);
+            
+            // [UI FIX] Sinkronisasi scroll teks area Environment Variable
+            DOM.env.addEventListener('scroll', () => {
+                DOM.envLines.style.transform = `translateY(-${DOM.env.scrollTop}px)`;
+            });
 
             DOM.navTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -693,7 +729,10 @@
                 const div = document.createElement('div'); div.className = 'w-full mt-1 mb-1'; div.innerHTML = message; DOM.logs.appendChild(div);
             } else {
                 const div = document.createElement('div'); div.className = `${colorClass} flex gap-1.5 md:gap-2 items-start`;
-                div.innerHTML = `${time} ${prefix} <div class="flex-1 break-words">${message}</div>`; DOM.logs.appendChild(div);
+                // Pencegahan XSS sederhana untuk pesan error biasa
+                const safeMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
+                div.innerHTML = `${time} ${prefix} <div class="flex-1 break-words">${type === 'error' ? safeMessage : message}</div>`; 
+                DOM.logs.appendChild(div);
             }
             DOM.logContainer.scrollTo({ top: DOM.logContainer.scrollHeight, behavior: 'smooth' });
         }
@@ -730,7 +769,7 @@
                     if (userRes.ok) {
                         const userData = await userRes.json();
                         if (userData && userData.avatar_url) {
-                            // Avatar tetap tidak diubah (sesuai instruksi Opsi #4)
+                            // Avatar tidak diubah, tetap pakai default
                             document.getElementById('user-avatar').src = userData.avatar_url;
                             
                             if (userData.avatar_url.includes('avatars.githubusercontent.com/u/')) {
@@ -775,7 +814,11 @@
                 const res = await fetch("https://api.netlify.com/api/v1/sites", {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-                if (!res.ok) throw new Error("Failed to load projects. Check token.");
+                
+                if (!res.ok) {
+                    if(res.status === 401) throw new Error("Netlify Token Kadaluarsa atau Tidak Valid (401).");
+                    throw new Error("Failed to load projects. Check token.");
+                }
                 
                 const data = await res.json();
                 netlifyProjects = data.map(p => ({ id: p.id, name: p.name }));
@@ -877,6 +920,8 @@
                 if (!ghRes.ok) {
                     if (ghRes.status === 404) {
                         log("GitHub Repo returned 404 (Repo Private atau tidak ada). Pastikan Token GitHub terisi dengan scope 'repo'.", "warn");
+                    } else if (ghRes.status === 401) {
+                        log("GitHub Token ditolak (401 Unauthorized). Cek kembali token Anda.", "warn");
                     } else {
                         log(`GitHub API returned: ${ghRes.statusText}`, "warn");
                     }
@@ -913,7 +958,7 @@
             DOM.btnDeploy.disabled = true;
 
             try {
-                // [PERBAIKAN LOGIKA - Opsi #4] Parsing Environment Variables yang lebih robust
+                // Parsing Environment Variables
                 const envStr = DOM.env.value.trim();
                 const envObj = {};
                 if (envStr) {
@@ -925,7 +970,6 @@
                             let val = match[2] || '';
                             val = val.trim();
                             
-                            // Membersihkan tanda kutip jika string dilingkupi petik
                             if (val.length >= 2 && ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'")))) {
                                 val = val.substring(1, val.length - 1);
                             }
@@ -999,24 +1043,23 @@
                 let status = "enqueued";
                 let attempts = 0;
                 let activeDeploy = null;
-                let networkErrors = 0; // Menghitung gagal koneksi ke server
+                let networkErrors = 0; 
                 
                 while (status !== "ready" && status !== "error" && attempts < 150) {
                     attempts++;
-                    await new Promise(r => setTimeout(r, 4000)); // Polling tiap 4 detik
+                    await new Promise(r => setTimeout(r, 4000));
                     
                     try {
                         const depRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
                             headers: { "Authorization": `Bearer ${token}` }
                         });
                         
-                        // [PERBAIKAN LOGIKA - Opsi #4] Toleransi Error Jaringan (Putus Koneksi)
                         if (!depRes.ok) {
                             networkErrors++;
                             if (networkErrors > 5) throw new Error("Gagal terhubung ke server Netlify API berturut-turut. Periksa koneksi internet Anda.");
                             continue; 
                         }
-                        networkErrors = 0; // Reset counter jika sukses
+                        networkErrors = 0; 
                         
                         const deploysData = await depRes.json();
                         
@@ -1033,7 +1076,7 @@
                             if(attempts % 5 === 0) log("Still waiting for build trigger...", "info");
                         }
                     } catch (pollErr) {
-                        if (pollErr.message.includes("berturut-turut")) throw pollErr; // Melempar error spesifik
+                        if (pollErr.message.includes("berturut-turut")) throw pollErr;
                         
                         networkErrors++;
                         if (networkErrors > 5) throw new Error("Koneksi internet terputus. Deployment dibatalkan.");
