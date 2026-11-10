@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <!-- FIX: maximum-scale=1 & user-scalable=no dihapus (melanggar WCAG 1.4.4, pengguna tidak bisa zoom) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Deployer - Deploy repo GitHub ke Netlify</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Deploy repository GitHub ke Netlify langsung dari browser. Token diproses di perangkat Anda dan hanya dikirim ke API Netlify.">
+    <meta name="theme-color" content="#020617">
+    <!-- <link rel="canonical" href="https://DOMAIN-ANDA.netlify.app/"> -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Netlify Deployer">
+    <meta property="og:description" content="Deploy repo GitHub ke Netlify dalam beberapa klik.">
+    <!-- <meta property="og:image" content="https://DOMAIN-ANDA.netlify.app/assets/images/og-image.png"> -->
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+
+    <!-- Performa: buka koneksi lebih awal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://api.netlify.com">
+    <link rel="dns-prefetch" href="https://api.github.com">
+
+    <!-- Library eksternal -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Style & script lokal -->
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.js" defer></script>
+</head>
+
+<body class="antialiased min-h-screen p-1 sm:p-4 md:p-8 flex flex-col justify-start items-center">
+    
+    <noscript><p class="text-rose-400 p-4">Aplikasi ini membutuhkan JavaScript untuk berjalan.</p></noscript>
+
+    <main class="w-full max-w-4xl glass-panel rounded-xl sm:rounded-2xl mb-6 md:mb-12 relative z-10">
+        <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 rounded-t-xl sm:rounded-t-2xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <header class="p-3 md:p-6 pb-3 md:pb-4 border-b border-white/5 relative overflow-hidden flex justify-between items-center gap-3 md:gap-5 rounded-t-xl sm:rounded-t-2xl">
+            <i class="fas fa-server absolute -right-2 -top-2 text-7xl md:text-9xl text-white/5 transform -rotate-12 pointer-events-none" aria-hidden="true"></i>
+            
+            <div class="flex items-center gap-3 md:gap-5">
+                <div class="relative z-10 shrink-0 group" id="avatar-container">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-teal-400 to-emerald-500 rounded-full blur-[6px] md:blur-[10px] opacity-60 animate-pulse transition-opacity duration-500" id="avatar-glow"></div>
+                    <div id="user-avatar-wrapper" class="relative w-10 h-10 md:w-16 md:h-16 rounded-full border-[2px] border-black overflow-hidden z-10 group-hover:scale-105 transition-transform duration-300 fallback-avatar">
+                         <img src="assets/images/danuk.jpg" id="user-avatar" alt="Foto profil" width="64" height="64" class="w-full h-full object-cover bg-slate-900" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                         <div class="w-full h-full bg-[#0f172a] text-[#64748b] flex items-center justify-center hidden"><i class="fas fa-user-astronaut"></i></div>
+                    </div>
+                </div>
+
+                <div class="relative z-10">
+                    <h1 class="text-lg md:text-3xl font-extrabold tracking-tight text-white mb-0 md:mb-1 leading-tight flex items-center gap-2">
+                        Netlify <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">Deployer</span>
+                    </h1>
+                    <p class="text-slate-400 text-[10px] md:text-sm font-medium leading-tight mt-0.5">Instant deployment from GitHub</p>
+                </div>
+            </div>
+
+            <button type="button" id="btn-disconnect" class="hidden relative z-10 text-[10px] md:text-xs font-bold bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-lg hover:bg-rose-500/20 transition-colors border border-rose-500/30 flex items-center gap-1.5">
+                <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Disconnect</span>
+            </button>
+        </header>
+
+        <div class="p-3 md:p-6 pt-3 md:pt-5 relative">
+            
+            <!-- Security Info -->
+            <div class="bg-black/40 border border-amber-500/20 rounded-lg p-2.5 md:p-4 mb-4 shadow-inner relative overflow-hidden">
+                <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500"></div>
+                <div class="flex items-start gap-2 md:gap-4">
+                    <div class="bg-amber-500/10 p-1 md:p-2 rounded-md text-amber-400 shrink-0 mt-0.5 hidden sm:block">
+                        <i class="fas fa-shield-halved text-sm md:text-xl" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-1 text-[10px] md:text-sm text-slate-300 leading-tight w-full">
+                        <details class="group">
+                            <summary class="font-bold text-white mb-0.5 cursor-pointer flex justify-between items-center outline-none select-none">
+                                <span class="flex items-center gap-1.5 hover:text-amber-300 transition-colors">
+                                    <i class="fas fa-info-circle text-amber-400 sm:hidden"></i> Info Keamanan & Cara Dapat Token
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 group-open:rotate-180"></i>
+                            </summary>
+                            
+                            <div class="mt-2.5 space-y-2 text-slate-400 border-t border-amber-500/20 pt-2.5 pb-1">
+                                <p class="mb-1.5">Aplikasi ini membutuhkan <strong>Netlify Personal Access Token</strong>. Ikuti langkah mudah ini untuk mendapatkannya:</p>
+                                <ol class="list-decimal list-outside ml-4 space-y-2 marker:text-amber-500/70">
+                                    <li>Buka halaman pengaturan token di <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" rel="noopener noreferrer" class="text-teal-400 font-semibold hover:text-teal-300 transition-colors">app.netlify.com <i class="fas fa-external-link-alt text-[8px] ml-0.5"></i></a>.</li>
+                                    <li>Klik tombol <strong>New access token</strong>.</li>
+                                    <li>Isi deskripsi (contoh: "Web Deployer") dan klik tombol <strong>Generate token</strong>.</li>
+                                    <li>Salin (<em>copy</em>) kode rahasia yang muncul <span class="text-rose-400">(Token ini hanya muncul sekali!)</span>.</li>
+                                    <li>Tempelkan (<em>paste</em>) kode tersebut ke kolom <strong>Netlify Token</strong> di bawah ini.</li>
+                                </ol>
+                                <div class="mt-3 p-2 bg-rose-950/30 border border-rose-900/50 rounded flex gap-2 items-start text-rose-300">
+                                    <i class="fas fa-exclamation-triangle mt-0.5 shrink-0"></i>
+                                    <span class="text-[9px] md:text-[11px]"><strong>Peringatan Keamanan:</strong> Fitur "Remember" hanya menyandikan token secara dasar (base64). Jika Anda menggunakan perangkat publik/warnet, <strong>JANGAN</strong> centang "Remember" dan pastikan untuk mengklik tombol <strong>Disconnect</strong> setelah selesai.</span>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token & Account Logic -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-5 mb-4 pb-4 border-b border-white/5">
+                
+                <div class="md:col-span-2 group relative z-50">
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="n-token" class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider group-focus-within:text-teal-400 transition-colors">Netlify Token <span class="text-rose-500">*</span></label>
+                        <div class="flex items-center gap-2 md:gap-4">
+                            <button type="button" id="btn-load-account" class="hidden text-[9px] md:text-xs font-bold bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded hover:bg-teal-500/30 transition-colors flex items-center gap-1 border border-teal-500/30">
+                                <i class="fas fa-sync-alt"></i> <span>Load</span>
+                            </button>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="remember-token" class="cyber-checkbox origin-right scale-75 md:scale-100">
+                                <label for="remember-token" class="ml-1 md:ml-2 text-[10px] md:text-xs font-medium text-slate-400 cursor-pointer hover:text-slate-200 select-none">Remember</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="flex rounded-lg md:rounded-xl shadow-sm relative z-40">
+                            <span class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-500 border border-r-0 border-slate-700/80 group-focus-within:border-teal-500 transition-colors rounded-l-lg md:rounded-l-xl"><i class="fas fa-key text-xs md:text-base"></i></span>
+                            <input type="password" id="n-token" class="flex-1 w-full px-2 md:px-4 py-2 md:py-3 input-dark !border-x-0 mono tracking-wider" placeholder="nfp_..." aria-label="Netlify Access Token" autocomplete="off" autocapitalize="off" spellcheck="false">
+                            <button type="button" id="toggle-token" class="bg-black px-2.5 md:px-4 flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors border border-l-0 border-slate-700/80 group-focus-within:border-teal-500 focus:outline-none rounded-r-lg md:rounded-r-xl" aria-label="Toggle Token Visibility">
+                                <i class="fas fa-eye text-xs md:text-base"></i>
+                            </button>
+                        </div>
+                        <div id="dropdown-token-history" class="absolute left-0 top-full mt-1 w-full bg-[#0a0a0e] border border-teal-500/30 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.9)] overflow-y-auto max-h-48 hidden flex-col divide-y divide-white/5 py-1 z-50"></div>
+                    </div>
+                </div>
+
+                <div class="group relative md:col-span-2">
+                    <label for="n-owner" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">GitHub Connected Account <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                        <input type="text" id="n-owner" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono relative z-20" placeholder="Enter GitHub Username..." aria-label="GitHub Owner">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 z-30 pointer-events-none">
+                            <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">Editable</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alert-box" class="hidden mb-4 p-2.5 md:p-4 rounded-lg md:rounded-xl text-[10px] md:text-sm font-medium border relative z-10" role="alert"></div>
+
+            <div class="nav-tabs mb-4" role="tablist" aria-label="Menu utama">
+                <button type="button" id="tab-btn-deploy" class="nav-tab active py-2 md:py-3 text-xs md:text-sm" data-target="tab-deploy" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-deploy">
+                    <i class="fas fa-rocket" aria-hidden="true"></i> Deploy App
+                </button>
+                <button type="button" id="tab-btn-manage" class="nav-tab py-2 md:py-3 text-xs md:text-sm" data-target="tab-manage" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-manage">
+                    <i class="fas fa-box-open" aria-hidden="true"></i> Manage Project
+                </button>
+            </div>
+
+            <!-- TAB 1: DEPLOY -->
+            <div id="tab-deploy" class="tab-content active relative z-10" role="tabpanel" aria-labelledby="tab-btn-deploy">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-5 mb-4">
+                    
+                    <div class="group relative z-40 md:col-span-1">
+                        <label for="n-repo" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Repository Name <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-book-journal-whills absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                            <input type="text" id="n-repo" autocomplete="off" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-8 input-dark rounded-lg md:rounded-xl mono relative z-20" placeholder="awesome-app">
+                            <i class="fas fa-chevron-down absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] pointer-events-none z-30"></i>
+                            <div id="dropdown-repo" class="absolute left-0 top-full mt-1 w-full bg-[#0a0a0e] border border-teal-500/30 rounded-lg md:rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-y-auto max-h-40 hidden flex-col divide-y divide-white/5 py-1 z-50"></div>
+                        </div>
+                        <p class="text-[9px] text-slate-500 mt-1 italic"><i class="fas fa-lock"></i> Repo privat tidak muncul di auto-complete, ketik manual.</p>
+                    </div>
+
+                    <div class="group relative z-30 md:col-span-1">
+                        <label for="n-branch" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Branch <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-code-branch absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors z-30"></i>
+                            <input type="text" id="n-branch" autocomplete="off" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-8 input-dark rounded-lg md:rounded-xl mono relative z-20" placeholder="main" value="main">
+                            <i class="fas fa-chevron-down absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] pointer-events-none z-30"></i>
+                            <div id="dropdown-branch" class="absolute left-0 top-full mt-1 w-full bg-[#0a0a0e] border border-teal-500/30 rounded-lg md:rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-y-auto max-h-40 hidden flex-col divide-y divide-white/5 py-1 z-50"></div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 mt-1 relative z-20">
+                        <button type="button" id="toggle-advanced" class="w-full flex justify-between items-center bg-black/40 border border-slate-700/80 p-2.5 md:p-3.5 rounded-lg md:rounded-xl text-slate-300 text-[10px] md:text-xs font-bold uppercase tracking-wider hover:border-teal-500 transition-colors focus:outline-none group shadow-inner" aria-expanded="false" aria-controls="advanced-settings">
+                            <span class="flex items-center gap-2"><i class="fas fa-sliders-h text-teal-500 group-hover:animate-pulse"></i> Advanced Settings (Optional)</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300" id="advanced-icon"></i>
+                        </button>
+                        
+                        <div id="advanced-settings" class="hidden mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 md:gap-y-4 bg-black/20 p-3 md:p-4 rounded-lg md:rounded-xl border border-white/5 shadow-inner">
+                            <div class="group md:col-span-2">
+                                <label for="n-project" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Project Name</label>
+                                <div class="relative">
+                                    <i class="fas fa-box absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors"></i>
+                                    <input type="text" id="n-project" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="Auto-generate">
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label for="n-buildcmd" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Build Command</label>
+                                <div class="relative">
+                                    <i class="fas fa-terminal absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors pointer-events-none z-10"></i>
+                                    <input type="text" id="n-buildcmd" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="e.g. npm run build">
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label for="n-publishdir" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Publish Directory</label>
+                                <div class="relative">
+                                    <i class="far fa-folder-open absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-base group-focus-within:text-teal-400 transition-colors"></i>
+                                    <input type="text" id="n-publishdir" class="w-full py-2 md:py-3 pl-8 md:pl-11 pr-3 input-dark rounded-lg md:rounded-xl mono" placeholder="e.g. dist or build">
+                                </div>
+                            </div>
+
+                            <div class="group md:col-span-2">
+                                <label for="n-env" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-teal-400 transition-colors">Environment Variables</label>
+                                <div class="rounded-lg md:rounded-xl overflow-hidden border border-slate-700/80 group-focus-within:border-teal-500 transition-colors shadow-inner bg-black/60 relative">
+                                    <div class="bg-black px-3 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fas fa-file-code text-teal-500 text-[10px]"></i><span class="text-[9px] md:text-[10px] font-mono text-slate-300">.env</span>
+                                        </div>
+                                    </div>
+                                    <div id="env-lines" class="absolute left-0 top-[28px] bottom-0 w-7 md:w-8 bg-black/40 border-r border-slate-800 flex flex-col items-center py-2 text-[9px] md:text-[10px] font-mono text-slate-600 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+                                        <span>1</span><span>2</span><span>3</span>
+                                    </div>
+                                    <textarea id="n-env" class="w-full p-2 pl-9 md:pl-10 bg-transparent text-emerald-400 mono text-[11px] md:text-[12px] min-h-[60px] md:min-h-[80px] focus:outline-none resize-none placeholder-slate-700 leading-normal" placeholder="API_KEY=secret_value" spellcheck="false" aria-label="Environment Variables"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-row gap-2 md:gap-3 mb-4 relative z-10 w-full flex-wrap">
+                    <button type="button" id="btn-test" class="btn-action btn-test flex-1 min-w-[120px] text-slate-300 font-bold py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center justify-center gap-1.5 text-[11px] md:text-sm">
+                        <i class="fas fa-satellite-dish text-slate-400 text-xs"></i> <span>Test</span>
+                    </button>
+                    <button type="button" id="btn-deploy" class="btn-action btn-deploy flex-[2] min-w-[180px] text-white font-bold py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center justify-center gap-2 shadow-lg text-xs md:text-sm">
+                        <i class="fas fa-rocket text-sm"></i> <span>Deploy to Netlify</span>
+                    </button>
+                    <button type="button" id="btn-cancel-deploy" class="hidden flex-[0.5] min-w-[100px] bg-slate-800 hover:bg-rose-900 border border-rose-900 text-rose-400 hover:text-rose-300 font-bold py-2.5 md:py-3 rounded-lg md:rounded-xl flex justify-center items-center gap-2 focus:outline-none text-xs md:text-sm transition-colors">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+
+                <div class="rounded-lg md:rounded-xl overflow-hidden shadow-inner border border-slate-700/50 bg-[#020202] relative z-10">
+                    <div class="bg-[#0a0a0a] border-b border-slate-800 px-3 py-2 flex items-center justify-between">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+                        </div>
+                        <div class="text-[8px] md:text-[9px] mono text-slate-500 font-bold tracking-widest uppercase">Build Console</div>
+                        <div class="w-8"></div>
+                    </div>
+                    <div class="p-2.5 md:p-3 mono text-[9px] md:text-[11px] overflow-y-auto h-40 md:h-56 leading-relaxed scroll-smooth" id="log-container" aria-live="polite">
+                        <div id="logs" class="flex flex-col gap-1 md:gap-1.5">
+                            <div class="text-slate-500 flex items-start gap-1.5 md:gap-2">
+                                <span class="text-teal-500" aria-hidden="true">❯</span><span>Netlify Deploy Engine (Ultra) initialized.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: MANAGE PROJECT -->
+            <div id="tab-manage" class="tab-content relative z-10" role="tabpanel" aria-labelledby="tab-btn-manage">
+                <div class="bg-rose-950/20 border border-rose-900/50 rounded-xl md:rounded-2xl p-3 md:p-5 relative">
+                    <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-rose-500 to-red-600 rounded-l-xl md:rounded-l-2xl"></div>
+                    
+                    <h3 class="text-sm md:text-lg font-bold text-rose-400 mb-0.5 flex items-center gap-2">
+                        <i class="fas fa-skull-crossbones"></i> Delete Project
+                    </h3>
+                    <p class="text-slate-400 text-[10px] md:text-xs mb-3">This action cannot be undone (Permanent).</p>
+                    
+                    <div class="group relative z-50 mb-3">
+                        <label for="n-delete-select" class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-focus-within:text-rose-400 transition-colors">Select Project <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-trash-alt absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-rose-500/50 text-xs md:text-base group-focus-within:text-rose-400 transition-colors z-30"></i>
+                            <select id="n-delete-select" class="w-full py-2.5 md:py-3 pl-8 md:pl-11 pr-8 input-dark rounded-lg md:rounded-xl font-semibold text-slate-200 border-rose-900/50 focus:border-rose-500 text-[11px] md:text-sm relative z-20">
+                                <option value="">Input Token and click 'Load' first...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="btn-trigger-delete" class="w-full btn-action btn-delete text-white font-bold py-2.5 md:py-3.5 rounded-lg md:rounded-xl flex justify-center items-center gap-2 focus:outline-none text-xs md:text-sm" disabled aria-label="Delete Project">
+                        <i class="fas fa-trash-alt"></i> Delete Permanently
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center mb-4">
+    <div class="flex justify-center gap-2 md:gap-4 mt-1 mb-3 text-slate-400 text-2xl">
+        <a href="https://www.tiktok.com/@danukmobilador" target="_blank" rel="noopener noreferrer" class="p-3 hover:text-white transition-transform transform hover:scale-110" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/danukpermadi2006" target="_blank" rel="noopener noreferrer" class="p-3 hover:text-pink-500 transition-transform transform hover:scale-110" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://youtube.com/@danukmobilador" target="_blank" rel="noopener noreferrer" class="p-3 hover:text-red-500 transition-transform transform hover:scale-110" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://github.com/danukpermadi2006" target="_blank" rel="noopener noreferrer" class="p-3 hover:text-white transition-transform transform hover:scale-110" aria-label="GitHub"><i class="fab fa-github"></i></a>
+        <a href="https://wa.me/6285129769015" target="_blank" rel="noopener noreferrer" class="p-3 hover:text-green-500 transition-transform transform hover:scale-110" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+    </div>
+    <p class="text-xs text-slate-400 max-w-md mx-auto px-4 leading-relaxed">
+        Token diproses di browser Anda dan hanya dikirim ke <span class="mono">api.netlify.com</span>.
+        Aplikasi ini tidak berafiliasi dengan Netlify, Inc.
+    </p>
+    </footer>
+
+    <!-- Modal Delete -->
+    <div id="modal-delete" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-project-target">
+        <div class="bg-[#0f172a] border border-rose-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 w-[92%] max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.9)] transform scale-95 transition-transform duration-300" id="modal-delete-content">
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-3 border border-rose-500/20">
+                    <i class="fas fa-exclamation-triangle text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-white mb-1" id="modal-title">Confirm Deletion</h3>
+                <p class="text-slate-400 text-xs md:text-sm">You are about to delete:</p>
+                <p class="text-rose-400 font-mono font-bold text-sm md:text-lg mt-0.5" id="modal-project-target"></p>
+                <p class="text-slate-300 text-[10px] md:text-xs mt-3 p-2 bg-rose-950/30 rounded border border-rose-900/50">
+                    This action will permanently delete the project and all of its deployments. Continue?
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="btn-cancel-delete" class="flex-1 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg md:rounded-xl transition-colors text-xs md:text-sm">Cancel</button>
+                <button type="button" id="btn-confirm-delete" class="flex-1 py-2 md:py-3 btn-action btn-delete text-white font-bold rounded-lg md:rounded-xl text-xs md:text-sm flex items-center justify-center">Yes, Delete!</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
